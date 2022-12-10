@@ -1,0 +1,160 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+    Layout = "~/Views/Shared/myLayout.cshtml";
+    int qtdMovies = 20;
+
+    var userAccountLoggedId = "";
+    if (Html.Action("UserAccountLoggedId", "Auth") == null)
+    {
+        userAccountLoggedId = "";
+    }
+    else
+    {
+        userAccountLoggedId = Html.Action("UserAccountLoggedId", "Auth").ToString();
+    }
+
+    var userOfUserAccountLoggedId = "";
+    if (Html.Action("UserOfUserAccountLoggedId", "Auth") == null)
+    {
+        userOfUserAccountLoggedId = "";
+    }
+    else
+    {
+        userOfUserAccountLoggedId = Html.Action("UserOfUserAccountLoggedId", "Auth").ToString();
+    }
+}
+
+<style>
+    html, body {
+        background: url(../../Assets/logo-color.png) no-repeat center center fixed;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
+
+    .mainCentralLogo {
+        position: absolute;
+        margin-left: auto;
+        margin-right: auto;
+        top: 50%;
+        left: 0;
+        right: 0;
+        text-align: center;
+    }
+</style>
+
+<span id="spanOfCentralLogo" name="spanOfCentralLogo"><img class="mainCentralLogo" style="margin-top: 0px;" src="/../Assets/logo-no-background.svg" height="90px" alt="" /></span>
+
+<input class="movieSearchInput" type="text" oninput="searchMovies(this.value)" placeholder="Pesquise um filme aqui"/> <span><img src="/../Assets/search.svg" onclick="testFoundGenres()" height="30px" style="margin-left: -85px" /></span>
+<br />
+<br />
+<div id="moviesGrid" style="display: none;">
+    @{
+        for (var iterador = 0; iterador < qtdMovies; iterador++)
+        {
+            <div class="movieProfile" id="movieProfile/@iterador" name="movieProfile/@iterador" onclick="getUserAcivity(@iterador)">
+                <a href="#">
+                    <div class="movieProfileContainer movieInfoProps" id="movieProfileContainer/@iterador" name="movieProfileContainer/@iterador">
+                        <input class="movieInfoInputReadonly" id="movieTitle/@iterador" disabled name="movieTitle/@iterador" value="Loading..." style="font-weight: 600"></input>
+                        <img style="width: 350px; height: 500px; padding: 13px 13px 13px 13px;" src="https://image.tmdb.org/t/p/w500/oj0ibkqKGJ3CvSTb3Pkx299P0SK.jpg" id="movieImg/@iterador" name="movieImg/@iterador" />
+                    </div><br />
+                    <div class="movieInfoProps">
+                        <label>Gênero</label>
+                        <input class="movieInfoInputReadonly" id="movieGenrers/@iterador" name="movieGenrers/@iterador" value="Loading..."></input>
+                    </div>
+                    <div class="movieInfoProps">
+                        <label>Popularidade</label>
+                        <input class="movieInfoInputReadonly" id="moviePopularity/@iterador" name="moviePopularity/@iterador" value="Loading..." />
+                    </div>
+                    <div class="movieInfoProps">
+                        <label>Lançado em</label>
+                        <input class="movieInfoInputReadonly" id="movieReleaseDate/@iterador" name="movieReleaseDate/@iterador" value="Loading..." />
+                    </div>
+                </a>
+            </div>
+        }
+    }
+</div>
+
+<script>
+    /*function testFoundGenres() {
+        $.get('https://api.themoviedb.org/3/genre/28/movies?api_key=API_KEY_HERE&language=en-US')
+            .then((response) => {
+                console.log(response);
+            });
+    }*/
+
+    function searchMovies(toFind) {
+        document.getElementById('moviesGrid').style.display = "block";
+        document.getElementById('spanOfCentralLogo').style.display = "none";
+        var moviesAndYourGenres = [];
+        var genres = [];
+        $.get("https://api.themoviedb.org/3/genre/movie/list?api_key=API_KEY_HERE&language=en", function (resultado) {
+            genres = resultado;
+        });
+
+        $.get("https://api.themoviedb.org/3/search/movie?API_KEY_HERE&language=en&query=" + toFind + "&page=1", function (resultado2) {
+            console.log(resultado2);
+            for (var i = 0; i < resultado2.results.length; i++) {
+                if (resultado2.results[i].genre_ids.length > 1) {
+                    moviesAndYourGenres.push({
+                        key: resultado2.results[i].id,
+                        value: resultado2.results[i].genre_ids[0]
+                    });
+                    for (x = 1; x < resultado2.results[i].genre_ids.length; x++) {
+                        moviesAndYourGenres[i].value = moviesAndYourGenres[i].value + ", " + resultado2.results[i].genre_ids[x];
+                    }
+                } else {
+                    moviesAndYourGenres.push({
+                        key: resultado2.results[i].id,
+                        value: resultado2.results[i].genre_ids[0].toString()
+                    });
+                }
+
+                for (var m = 0; m < genres.genres.length; m++) {
+                    if (moviesAndYourGenres[i].value.match(genres.genres[m].id)) {
+                        moviesAndYourGenres[i].value = moviesAndYourGenres[i].value.replace(genres.genres[m].id.toString(), genres.genres[m].name);
+                    }
+                }
+
+                document.getElementById('movieTitle/' + i).value = resultado2.results[i].title;
+                document.getElementById('movieTitle/' + i).style.width = document.getElementById('movieTitle/' + i).value.length + 2 + "ch";
+
+                document.getElementById('movieImg/' + i).src = "https://image.tmdb.org/t/p/w500" + resultado2.results[i].poster_path;
+
+                document.getElementById('movieGenrers/' + i).value = moviesAndYourGenres[i].value;
+                document.getElementById('movieGenrers/' + i).style.width = document.getElementById('movieGenrers/' + i).value.length + 2 + "ch";
+
+                document.getElementById('moviePopularity/' + i).value = resultado2.results[i].popularity;
+                document.getElementById('moviePopularity/' + i).style.width = document.getElementById('moviePopularity/' + i).value.length + 2 + "ch";
+
+                document.getElementById('movieReleaseDate/' + i).value = resultado2.results[i].release_date;
+                document.getElementById('movieReleaseDate/' + i).style.width = document.getElementById('movieReleaseDate/' + i).value.length + 2 + "ch";
+                //console.log("ID do filme: " + resultado2.results[i].id + "\nNome do filme: " + resultado2.results[i].title + "\nImagem do filme: " + "https://image.tmdb.org/t/p/w500" + resultado2.results[i].poster_path + "\nDescrição do filme: " + resultado2.results[i].overview + "\nGênero(s): " + moviesAndYourGenres[i].value + "\nPopularidade: " + resultado2.results[i].popularity + "\nData de publicação: " + resultado2.results[i].release_date);
+            }
+        });
+    }
+
+    function getUserAcivity(movieId) {
+        var movieCategories = document.getElementById('movieGenrers/' + movieId).value;
+        const arr = movieCategories.split(',');
+        for (var i = 0; i < arr.length; i++) {
+            $.ajax(
+            {
+                type: 'POST',
+                dataType: 'JSON',
+                url: '@Url.Action("GetUserActivity", "Activity")',
+                    data: { 'userAccountLoggedId': @userAccountLoggedId, 'userLoggedId': @userOfUserAccountLoggedId, 'category': arr[i].trim(), 'contentsType': 'movie'},
+                success:
+                    function (response) {
+                        console.log("Ok");
+                    },
+                error:
+                    function (response) {
+                        alert("Error: " + response);
+                    }
+            });
+        }
+    }
+</script>
