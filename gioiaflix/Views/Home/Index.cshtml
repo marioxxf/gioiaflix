@@ -94,7 +94,7 @@
             genres = resultado;
         });
 
-        $.get("https://api.themoviedb.org/3/search/movie?API_KEY_HERE&language=en&query=" + toFind + "&page=1", function (resultado2) {
+        $.get("https://api.themoviedb.org/3/search/movie?api_key=API_KEY_HERE&language=en&query=" + toFind + "&page=1", function (resultado2) {
             console.log(resultado2);
             for (var i = 0; i < resultado2.results.length; i++) {
                 if (resultado2.results[i].genre_ids.length > 1) {
